@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi Álbum Mundial 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  const cfg = {
+    apiKey:"AIzaSyC3slh2KKWpMHTTQ3GnM59UCMtl5WU6IdM",
+    authDomain:"album-fifa.firebaseapp.com",
+    databaseURL:"https://album-fifa-default-rtdb.firebaseio.com",
+    projectId:"album-fifa",
+    storageBucket:"album-fifa.firebasestorage.app",
+    messagingSenderId:"98512016346",
+    appId:"1:98512016346:web:b42d8da06764737a52a6e3"
+  };
+  const app = initializeApp(cfg);
+  const db  = getDatabase(app);
+  window._db  = db;
+  window._ref = ref;
+  window._set = set;
+  window._get = get;
+  window._fbReady = true;
+  document.dispatchEvent(new Event('fbReady'));
+</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;padding-bottom:60px}
+::-webkit-scrollbar{width:7px}::-webkit-scrollbar-track{background:#1e293b}::-webkit-scrollbar-thumb{background:#475569;border-radius:4px}
+
+/* ---- HEADER ---- */
+header{background:linear-gradient(135deg,#1e3a8a 0%,#1e1b4b 60%,#0f172a 100%);border-bottom:1px solid rgba(99,102,241,.2);padding:28px 24px;position:relative;overflow:hidden}
+header::before{content:'';position:absolute;top:-60px;right:-60px;width:300px;height:300px;background:radial-gradient(circle,rgba(16,185,129,.12) 0%,transparent 70%);pointer-events:none}
+.header-inner{max-width:1200px;margin:0 auto;display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:center}
+.header-badge{background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.3);color:#818cf8;font-size:11px;font-weight:700;padding:4px 12px;border-radius:999px;letter-spacing:.06em;text-transform:uppercase}
+.header-title{font-size:clamp(24px,4vw,36px);font-weight:800;color:#fff;margin-top:6px}
+.header-title span{background:linear-gradient(90deg,#34d399,#2dd4bf);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header-sub{font-size:13px;color:#94a3b8;margin-top:4px;display:flex;align-items:center;gap:6px}
+.header-btns{display:flex;flex-wrap:wrap;gap:10px}
+.btn-primary{background:#059669;color:#fff;border:none;padding:10px 18px;border-radius:12px;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:background .2s,transform .1s}
+.btn-primary:hover{background:#10b981}.btn-primary:active{transform:scale(.96)}
+.btn-secondary{background:#1e293b;color:#cbd5e1;border:1px solid #334155;padding:10px 16px;border-radius:12px;font-weight:600;font-size:13px;cursor:pointer;transition:background .2s,transform .1s}
+.btn-secondary:hover{background:#334155}.btn-secondary:active{transform:scale(.96)}
+
+/* ---- SYNC DOT ---- */
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;vertical-align:middle;margin-right:4px}
+.dot-ok{background:#10b981}.dot-err{background:#ef4444}
+.dot-busy{background:#f59e0b;animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ---- STATS CARDS ---- */
+.main{max-width:1200px;margin:0 auto;padding:28px 20px 0}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:28px}
+.stat-card{background:rgba(30,41,59,.6);border:1px solid rgba(71,85,105,.4);border-radius:18px;padding:20px}
+.stat-label{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#94a3b8}
+.stat-num{font-size:32px;font-weight:800;margin-top:6px}
+.num-green{color:#34d399}.num-red{color:#f87171}.num-yellow{color:#fbbf24}.num-white{color:#f1f5f9}
+.stat-bar-bg{background:#1e293b;border-radius:999px;height:6px;margin-top:14px;overflow:hidden}
+.stat-bar-fill{height:100%;background:linear-gradient(90deg,#10b981,#2dd4bf);border-radius:999px;transition:width .5s}
+.stat-pct{font-size:12px;color:#94a3b8;margin-top:4px}
+
+/* ---- TABS ---- */
+.tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.tab{padding:10px 20px;border-radius:12px;font-weight:700;font-size:13px;border:none;cursor:pointer;transition:all .2s}
+.tab-on{background:#4f46e5;color:#fff;box-shadow:0 4px 14px rgba(79,70,229,.35)}
+.tab-off{background:#1e293b;color:#94a3b8}.tab-off:hover{background:#334155;color:#e2e8f0}
+.badge{background:rgba(245,158,11,.2);color:#fbbf24;font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px;margin-left:6px;vertical-align:middle}
+
+/* ---- LEGEND ---- */
+.legend{display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:12px;color:#94a3b8;background:rgba(30,41,59,.3);border:1px solid rgba(71,85,105,.15);padding:10px 16px;border-radius:14px;margin-bottom:20px}
+.legend strong{font-size:10px;text-transform:uppercase;letter-spacing:.06em}
+.leg-item{display:flex;align-items:center;gap:7px}
+.leg-box{width:16px;height:16px;border-radius:6px;border:1px solid;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0}
+.leg-verde{background:rgba(16,185,129,.12);border-color:#10b981;color:#34d399}
+.leg-roja{background:rgba(239,68,68,.12);border-color:#ef4444;color:#f87171}
+.leg-amarilla{background:rgba(251,191,36,.15);border-color:#f59e0b;color:#fbbf24}
+.leg-vacia{background:#0f172a;border-color:#1e293b;color:#475569}
+.leg-hint{font-size:11px;background:#1e293b;color:#818cf8;padding:3px 10px;border-radius:8px;margin-left:auto}
+
+/* ---- TOOLBAR ---- */
+.toolbar{background:rgba(30,41,59,.4);border:1px solid rgba(71,85,105,.3);padding:14px;border-radius:18px;margin-bottom:22px;display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center}
+.search-wrap{position:relative;flex:1;min-width:200px;max-width:360px}
+.search-wrap svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:17px;height:17px;color:#64748b;pointer-events:none}
+.search-wrap input{width:100%;padding:10px 14px 10px 36px;background:#0f172a;border:1px solid #334155;border-radius:12px;color:#e2e8f0;font-size:13px;outline:none;font-family:inherit;transition:border .2s}
+.search-wrap input:focus{border-color:#6366f1}
+.filter-btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.filter-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#64748b}
+.fbtn{padding:8px 14px;border-radius:10px;font-size:12px;font-weight:700;border:none;cursor:pointer;transition:all .2s}
+.fbtn-on{background:#4f46e5;color:#fff}
+.fbtn-off{background:#1e293b;color:#94a3b8}.fbtn-off:hover{background:#334155;color:#e2e8f0}
+
+/* ---- CARDS GRID ---- */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px}
+.card{background:rgba(30,41,59,.45);border:1px solid rgba(71,85,105,.5);border-radius:20px;padding:20px;transition:border-color .2s}
+.card-done{border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.04)}
+.card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+.card-info{display:flex;align-items:center;gap:10px}
+.flag{font-size:30px;line-height:1}
+.card-name{font-size:15px;font-weight:800;color:#f1f5f9;line-height:1.2}
+.card-sub{font-size:11px;color:#94a3b8;margin-top:2px}
+.card-count{text-align:right;font-size:12px;font-weight:700;color:#e2e8f0}
+.card-count span{font-size:10px;color:#64748b;display:block;margin-top:2px}
+.card-prog{height:5px;background:#1e293b;border-radius:999px;margin-bottom:16px;overflow:hidden}
+.card-prog-fill{height:100%;border-radius:999px;transition:width .4s}
+.fill-done{background:linear-gradient(90deg,#10b981,#2dd4bf)}
+.fill-wip{background:linear-gradient(90deg,#6366f1,#818cf8)}
+
+/* ---- ESTAMPA GRID ---- */
+.stamps{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.stamp{position:relative;height:42px;border:1px solid;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;background:none;font-family:inherit}
+.stamp:active{transform:scale(.88)}
+.stamp:hover{filter:brightness(1.25)}
+.s-verde{background:rgba(16,185,129,.12);border-color:#10b981;color:#34d399}
+.s-roja{background:rgba(239,68,68,.12);border-color:#ef4444;color:#f87171}
+.s-amarilla{background:rgba(251,191,36,.15);border-color:#f59e0b;color:#fbbf24}
+.s-vacia{background:#0f172a;border-color:#1e293b;color:#475569}
+.s-icon{position:absolute;top:2px;right:3px;font-size:8px;font-weight:900;line-height:1}
+.s-label{font-size:10px}
+
+/* ---- FOOTER CARD ---- */
+.card-footer{margin-top:14px;padding-top:10px;border-top:1px solid rgba(71,85,105,.25);display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+.pill-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-right:2px}
+.pill-red{color:#f87171}.pill-green{color:#34d399}.pill-yellow{color:#fbbf24}
+.pill{font-size:10px;font-weight:700;background:#0f172a;padding:2px 6px;border-radius:6px}
+.pill-r{border:1px solid rgba(239,68,68,.3);color:#fca5a5}
+.pill-y{border:1px solid rgba(245,158,11,.3);color:#fcd34d}
+.done-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#34d399;text-align:center;width:100%}
+
+/* ---- PANEL REPETIDAS HEADER ---- */
+.rep-banner{background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);padding:14px 18px;border-radius:16px;margin-bottom:20px;display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center}
+.rep-banner-text p:first-child{font-weight:700;font-size:14px;color:#fbbf24}
+.rep-banner-text p:last-child{font-size:12px;color:#94a3b8;margin-top:3px}
+.btn-yellow{background:#d97706;color:#fff;border:none;padding:9px 16px;border-radius:11px;font-weight:700;font-size:13px;cursor:pointer;transition:background .2s,transform .1s}
+.btn-yellow:hover{background:#f59e0b}.btn-yellow:active{transform:scale(.96)}
+
+/* ---- MODAL ---- */
+.modal-overlay{position:fixed;inset:0;z-index:999;background:rgba(2,6,23,.8);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:16px}
+.modal-overlay.open{display:flex}
+.modal-box{background:#0f172a;border:1px solid rgba(71,85,105,.6);border-radius:22px;padding:24px;max-width:340px;width:100%;box-shadow:0 25px 60px rgba(0,0,0,.5)}
+.modal-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+.modal-flag{font-size:28px}
+.modal-nombre{font-size:19px;font-weight:800;color:#fff;margin-top:4px}
+.modal-sub{font-size:12px;color:#64748b;margin-top:2px}
+.modal-sub b{color:#818cf8;font-size:13px}
+.modal-close{background:none;border:none;color:#64748b;cursor:pointer;padding:4px;border-radius:8px;transition:color .2s}
+.modal-close:hover{color:#fff;background:#1e293b}
+.modal-btns{margin-top:20px;display:flex;flex-direction:column;gap:10px}
+.mbtn{width:100%;padding:13px 16px;border-radius:14px;font-weight:700;font-size:14px;border:1px solid;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-family:inherit;transition:all .2s}
+.mbtn:hover{filter:brightness(1.15)}
+.mbtn-green{background:rgba(16,185,129,.1);border-color:rgba(16,185,129,.35);color:#6ee7b7}
+.mbtn-red{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.35);color:#fca5a5}
+.mbtn-yellow{background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.35);color:#fcd34d}
+.mbtn-gray{background:#1e293b;border-color:#334155;color:#94a3b8}
+.mbtn-tag{font-size:11px;padding:3px 10px;border-radius:8px;font-weight:700}
+.tag-green{background:rgba(16,185,129,.2);color:#34d399}
+.tag-red{background:rgba(239,68,68,.2);color:#f87171}
+.tag-yellow{background:rgba(245,158,11,.2);color:#fbbf24}
+.mbtn-icon{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0}
+.icon-green{background:#10b981;color:#022c22}
+.icon-red{background:#ef4444;color:#450a0a}
+.icon-yellow{background:#f59e0b;color:#431407}
+.icon-gray{background:#334155;color:#94a3b8}
+
+/* ---- TOAST ---- */
+#toast{position:fixed;bottom:22px;right:22px;z-index:9999;background:#059669;color:#fff;font-weight:700;font-size:14px;padding:12px 20px;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.4);display:flex;align-items:center;gap:8px;transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none}
+#toast.show{transform:translateY(0);opacity:1}
+
+/* ---- EMPTY ---- */
+.empty{grid-column:1/-1;padding:60px;text-align:center;color:#475569}
+.empty p:first-child{font-size:18px;font-weight:700;margin-bottom:6px}
+
+/* ---- RESPONSIVE ---- */
+@media(max-width:600px){
+  header{padding:20px 16px}
+  .main{padding:20px 14px 0}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .cards-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <div>
+      <div class="header-badge">⚽ Álbum de Estampas Interactivo</div>
+      <div class="header-title">Mi Álbum <span>Mundial 2026</span></div>
+      <div class="header-sub">
+        <span class="dot dot-busy" id="syncDot"></span>
+        <span id="syncTxt">Conectando con Firebase...</span>
+      </div>
+    </div>
+    <div class="header-btns">
+      <button class="btn-primary" onclick="compartirFaltantes()">
+        <svg width="17" height="17" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        Compartir Faltantes
+      </button>
+      <button class="btn-secondary" onclick="resetear()">Reiniciar</button>
+    </div>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- STATS -->
+  <div class="stats-grid">
+    <div class="stat-card" style="grid-column:span 1">
+      <div class="stat-label">Progreso General</div>
+      <div class="stat-num num-white" id="statPct">0%</div>
+      <div class="stat-bar-bg"><div class="stat-bar-fill" id="statBar" style="width:0%"></div></div>
+      <div class="stat-pct" id="statSub">0 de 0 estampas</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">✅ Tengo</div>
+      <div class="stat-num num-green" id="statTengo">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">❌ Me Faltan</div>
+      <div class="stat-num num-red" id="statFalta">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">🔄 Repetidas</div>
+      <div class="stat-num num-yellow" id="statRep">0</div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab tab-on" id="tabProgreso" onclick="setTab('progreso')">📋 Mi Progreso</button>
+    <button class="tab tab-off" id="tabRepetidas" onclick="setTab('repetidas')">🔄 Repetidas <span class="badge" id="badgeRep">0</span></button>
+  </div>
+
+  <!-- ===== PANEL PROGRESO ===== -->
+  <div id="panelProgreso">
+    <div class="legend">
+      <strong>Leyenda:</strong>
+      <div class="leg-item"><span class="leg-box leg-verde">✓</span>Ya la tengo</div>
+      <div class="leg-item"><span class="leg-box leg-roja">✕</span>Me falta</div>
+      <div class="leg-item"><span class="leg-box leg-vacia"></span>Sin marcar</div>
+      <span class="leg-hint">Pulsa un número para cambiar su estado</span>
+    </div>
+    <div class="toolbar">
+      <div class="search-wrap">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" id="busqProg" placeholder="Buscar país..." oninput="renderProgreso()">
+      </div>
+      <div class="filter-btns">
+        <span class="filter-label">Filtrar:</span>
+        <button class="fbtn fbtn-on" id="f-todos" onclick="setFiltro('todos')">Todos (<span id="cTodos">0</span>)</button>
+        <button class="fbtn fbtn-off" id="f-pendientes" onclick="setFiltro('pendientes')">Con faltantes (<span id="cPend">0</span>)</button>
+        <button class="fbtn fbtn-off" id="f-completos" onclick="setFiltro('completos')">Completados (<span id="cComp">0</span>)</button>
+      </div>
+    </div>
+    <div class="cards-grid" id="gridProgreso"></div>
+  </div>
+
+  <!-- ===== PANEL REPETIDAS ===== -->
+  <div id="panelRepetidas" style="display:none">
+    <div class="legend">
+      <strong>Leyenda:</strong>
+      <div class="leg-item"><span class="leg-box leg-amarilla">2+</span>Repetida</div>
+      <div class="leg-item"><span class="leg-box leg-verde">✓</span>Tengo (1 copia)</div>
+      <div class="leg-item"><span class="leg-box leg-vacia"></span>Sin marcar</div>
+      <span class="leg-hint">Pulsa para marcar/quitar repetida</span>
+    </div>
+    <div class="rep-banner">
+      <div class="rep-banner-text">
+        <p>🔄 Tengo <span id="repTotal">0</span> estampas repetidas para intercambiar</p>
+        <p>Compártelas con amigos y haz cambios</p>
+      </div>
+      <button class="btn-yellow" onclick="compartirRepetidas()">📤 Compartir Repetidas</button>
+    </div>
+    <div class="toolbar">
+      <div class="search-wrap">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" id="busqRep" placeholder="Buscar país..." oninput="renderRepetidas()">
+      </div>
+    </div>
+    <div class="cards-grid" id="gridRepetidas"></div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- MODAL PROGRESO -->
+<div class="modal-overlay" id="modalProg">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div>
+        <div class="modal-flag" id="mpFlag">🏳️</div>
+        <div class="modal-nombre" id="mpNombre">País</div>
+        <div class="modal-sub"><span id="mpAbrev" style="background:rgba(99,102,241,.2);color:#a5b4fc;font-size:11px;font-weight:800;padding:1px 7px;border-radius:5px;margin-right:6px"></span>Estampa <b id="mpNum">--</b></div>
+      </div>
+      <button class="modal-close" onclick="cierraModalProg()">
+        <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-btns">
+      <button class="mbtn mbtn-green" onclick="setEstampaProgreso('tengo')">
+        <span style="display:flex;align-items:center;gap:10px"><span class="mbtn-icon icon-green">✓</span> ¡Ya la tengo!</span>
+        <span class="mbtn-tag tag-green">Verde</span>
+      </button>
+      <button class="mbtn mbtn-red" onclick="setEstampaProgreso('falta')">
+        <span style="display:flex;align-items:center;gap:10px"><span class="mbtn-icon icon-red">✕</span> Me hace falta</span>
+        <span class="mbtn-tag tag-red">Rojo</span>
+      </button>
+      <button class="mbtn mbtn-gray" onclick="setEstampaProgreso('ninguno')">
+        <span style="display:flex;align-items:center;gap:10px"><span class="mbtn-icon icon-gray">Ø</span> Sin marcar</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL REPETIDAS -->
+<div class="modal-overlay" id="modalRep">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div>
+        <div class="modal-flag" id="mrFlag">🏳️</div>
+        <div class="modal-nombre" id="mrNombre">País</div>
+        <div class="modal-sub"><span id="mrAbrev" style="background:rgba(99,102,241,.2);color:#a5b4fc;font-size:11px;font-weight:800;padding:1px 7px;border-radius:5px;margin-right:6px"></span>Estampa <b id="mrNum">--</b></div>
+      </div>
+      <button class="modal-close" onclick="cierraModalRep()">
+        <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-btns">
+      <button class="mbtn mbtn-yellow" onclick="setRepetida(true)">
+        <span style="display:flex;align-items:center;gap:10px"><span class="mbtn-icon icon-yellow">2+</span> ¡La tengo repetida!</span>
+        <span class="mbtn-tag tag-yellow">Repetida</span>
+      </button>
+      <button class="mbtn mbtn-gray" onclick="setRepetida(false)">
+        <span style="display:flex;align-items:center;gap:10px"><span class="mbtn-icon icon-gray">Ø</span> Quitar de repetidas</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast">✓ <span id="toastMsg">Guardado</span></div>
+
+<script>
+// ============================================================
+// DATOS BASE — todo sin marcar, solo la cantidad por equipo
+// tengos:[] faltas:[] => el usuario empieza de cero
+// ============================================================
+const EQUIPOS = [
+  // Grupo A
+  {id:"mexico",       nombre:"México",           flag:"🇲🇽", abrev:"MEX", pag:8,   grupo:"A"},
+  {id:"sudafrica",    nombre:"Sudáfrica",         flag:"🇿🇦", abrev:"RSA", pag:10,  grupo:"A"},
+  {id:"corea",        nombre:"Corea",             flag:"🇰🇷", abrev:"KOR", pag:12,  grupo:"A"},
+  {id:"checa",        nombre:"Rep. Checa",        flag:"🇨🇿", abrev:"CZE", pag:14,  grupo:"A"},
+  // Grupo B
+  {id:"canada",       nombre:"Canadá",            flag:"🇨🇦", abrev:"CAN", pag:16,  grupo:"B"},
+  {id:"bosnia",       nombre:"Bosnia",            flag:"🇧🇦", abrev:"BIH", pag:18,  grupo:"B"},
+  {id:"catar",        nombre:"Catar",             flag:"🇶🇦", abrev:"QAT", pag:20,  grupo:"B"},
+  {id:"suiza",        nombre:"Suiza",             flag:"🇨🇭", abrev:"SUI", pag:22,  grupo:"B"},
+  // Grupo C
+  {id:"brasil",       nombre:"Brasil",            flag:"🇧🇷", abrev:"BRA", pag:24,  grupo:"C"},
+  {id:"marruecos",    nombre:"Marruecos",         flag:"🇲🇦", abrev:"MAR", pag:26,  grupo:"C"},
+  {id:"haiti",        nombre:"Haití",             flag:"🇭🇹", abrev:"HAI", pag:28,  grupo:"C"},
+  {id:"escocia",      nombre:"Escocia",           flag:"🏴󠁧󠁢󠁳󠁣󠁴󠁿", abrev:"SCO", pag:30,  grupo:"C"},
+  // Grupo D
+  {id:"usa",          nombre:"Estados Unidos",    flag:"🇺🇸", abrev:"USA", pag:32,  grupo:"D"},
+  {id:"paraguay",     nombre:"Paraguay",          flag:"🇵🇾", abrev:"PAR", pag:34,  grupo:"D"},
+  {id:"australia",    nombre:"Australia",         flag:"🇦🇺", abrev:"AUS", pag:36,  grupo:"D"},
+  {id:"turquia",      nombre:"Turquía",           flag:"🇹🇷", abrev:"TUR", pag:38,  grupo:"D"},
+  // Grupo E
+  {id:"alemania",     nombre:"Alemania",          flag:"🇩🇪", abrev:"GER", pag:40,  grupo:"E"},
+  {id:"curacao",      nombre:"Curazao",           flag:"🇨🇼", abrev:"CUW", pag:42,  grupo:"E"},
+  {id:"marfil",       nombre:"Costa de Marfil",   flag:"🇨🇮", abrev:"CIV", pag:44,  grupo:"E"},
+  {id:"ecuador",      nombre:"Ecuador",           flag:"🇪🇨", abrev:"ECU", pag:46,  grupo:"E"},
+  // Grupo F
+  {id:"paises_bajos", nombre:"Países Bajos",      flag:"🇳🇱", abrev:"NED", pag:48,  grupo:"F"},
+  {id:"japon",        nombre:"Japón",             flag:"🇯🇵", abrev:"JPN", pag:50,  grupo:"F"},
+  {id:"suecia",       nombre:"Suecia",            flag:"🇸🇪", abrev:"SWE", pag:52,  grupo:"F"},
+  {id:"tunez",        nombre:"Túnez",             flag:"🇹🇳", abrev:"TUN", pag:54,  grupo:"F"},
+  // Grupo G
+  {id:"belgica",      nombre:"Bélgica",           flag:"🇧🇪", abrev:"BEL", pag:58,  grupo:"G"},
+  {id:"egipto",       nombre:"Egipto",            flag:"🇪🇬", abrev:"EGV", pag:60,  grupo:"G"},
+  {id:"iran",         nombre:"Irán",              flag:"🇮🇷", abrev:"IRN", pag:62,  grupo:"G"},
+  {id:"nz",           nombre:"Nueva Zelanda",     flag:"🇳🇿", abrev:"NZL", pag:64,  grupo:"G"},
+  // Grupo H
+  {id:"espana",       nombre:"España",            flag:"🇪🇸", abrev:"ESP", pag:66,  grupo:"H"},
+  {id:"cabo_verde",   nombre:"Cabo Verde",        flag:"🇨🇻", abrev:"CPV", pag:68,  grupo:"H"},
+  {id:"arabia",       nombre:"Arabia Saudita",    flag:"🇸🇦", abrev:"KSA", pag:70,  grupo:"H"},
+  {id:"uruguay",      nombre:"Uruguay",           flag:"🇺🇾", abrev:"URU", pag:72,  grupo:"H"},
+  // Grupo I
+  {id:"francia",      nombre:"Francia",           flag:"🇫🇷", abrev:"FRA", pag:74,  grupo:"I"},
+  {id:"senegal",      nombre:"Senegal",           flag:"🇸🇳", abrev:"SEN", pag:76,  grupo:"I"},
+  {id:"irak",         nombre:"Irak",              flag:"🇮🇶", abrev:"IRQ", pag:78,  grupo:"I"},
+  {id:"noruega",      nombre:"Noruega",           flag:"🇳🇴", abrev:"NOR", pag:80,  grupo:"I"},
+  // Grupo J
+  {id:"argentina",    nombre:"Argentina",         flag:"🇦🇷", abrev:"ARG", pag:82,  grupo:"J"},
+  {id:"argelia",      nombre:"Argelia",           flag:"🇩🇿", abrev:"ALG", pag:84,  grupo:"J"},
+  {id:"austria",      nombre:"Austria",           flag:"🇦🇹", abrev:"AUT", pag:86,  grupo:"J"},
+  {id:"jordania",     nombre:"Jordania",          flag:"🇯🇴", abrev:"JOR", pag:88,  grupo:"J"},
+  // Grupo K
+  {id:"portugal",     nombre:"Portugal",          flag:"🇵🇹", abrev:"POR", pag:90,  grupo:"K"},
+  {id:"congo",        nombre:"Congo",             flag:"🇨🇬", abrev:"COD", pag:92,  grupo:"K"},
+  {id:"uzbekistan",   nombre:"Uzbekistán",        flag:"🇺🇿", abrev:"UZB", pag:94,  grupo:"K"},
+  {id:"colombia",     nombre:"Colombia",          flag:"🇨🇴", abrev:"COL", pag:96,  grupo:"K"},
+  // Grupo L
+  {id:"inglaterra",   nombre:"Inglaterra",        flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", abrev:"ENG", pag:98,  grupo:"L"},
+  {id:"croacia",      nombre:"Croacia",           flag:"🇭🇷", abrev:"CRO", pag:100, grupo:"L"},
+  {id:"ghana",        nombre:"Ghana",             flag:"🇬🇭", abrev:"GHA", pag:102, grupo:"L"},
+  {id:"panama",       nombre:"Panamá",            flag:"🇵🇦", abrev:"PAN", pag:104, grupo:"L"},
+  // Especiales
+  {id:"fwc",          nombre:"Especiales FWC",    flag:"⭐", abrev:"FWC", pag:null, grupo:"★", esEspecial:true}
+];
+
+// Generar datos base limpios (todo sin marcar)
+function datosLimpios() {
+  return EQUIPOS.map(e => ({
+    ...e,
+    tengos: [],   // estampas que YA TENGO
+    faltas: []    // estampas que me FALTAN
+  }));
+}
+
+// ============================================================
+// ESTADO
+// ============================================================
+let album    = [];   // progreso
+let repetidas = {};  // { id: [nums] }
+let filtro   = 'todos';
+let tab      = 'progreso';
+let selProg  = {paisId:null, num:null};
+let selRep   = {paisId:null, num:null};
+
+function totalPais(p){ return p.esEspecial ? 10 : 20; }
+// El número de la estampa 10 en especiales se representa como 99 (='00')
+function numReal(p, i){ return p.esEspecial && i===10 ? 99 : i; }
+function labelNum(n){ return n===99?'00':n; }
+
+// ============================================================
+// FIREBASE
+// ============================================================
+function setSyncUI(estado, msg){
+  const d=document.getElementById('syncDot'), t=document.getElementById('syncTxt');
+  d.className='dot '+(estado==='ok'?'dot-ok':estado==='err'?'dot-err':'dot-busy');
+  t.textContent=msg;
+}
+
+async function fbGuardar(){
+  if(!window._fbReady) return;
+  setSyncUI('busy','Guardando...');
+  try{
+    await window._set(window._ref(window._db,'album/progreso'), album);
+    await window._set(window._ref(window._db,'album/repetidas'), repetidas);
+    setSyncUI('ok','Guardado en Firebase ✓');
+  }catch(e){ setSyncUI('err','Error al guardar'); }
+}
+
+async function fbCargar(){
+  if(!window._fbReady) return false;
+  try{
+    const sp = await window._get(window._ref(window._db,'album/progreso'));
+    const sr = await window._get(window._ref(window._db,'album/repetidas'));
+    album     = sp.exists() ? sp.val() : datosLimpios();
+    repetidas = sr.exists() ? (sr.val()||{}) : {};
+    setSyncUI('ok','Sincronizado con Firebase ✓');
+    return true;
+  }catch(e){ setSyncUI('err','Sin conexión · datos locales'); return false; }
+}
+
+// ============================================================
+// INICIALIZACIÓN
+// ============================================================
+async function init(){
+  setSyncUI('busy','Conectando...');
+  const ok = await fbCargar();
+  if(!ok){
+    const lp = localStorage.getItem('album26_prog');
+    const lr = localStorage.getItem('album26_rep');
+    album     = lp ? JSON.parse(lp) : datosLimpios();
+    repetidas = lr ? JSON.parse(lr) : {};
+  }
+  render();
+}
+
+function guardar(){
+  localStorage.setItem('album26_prog', JSON.stringify(album));
+  localStorage.setItem('album26_rep',  JSON.stringify(repetidas));
+  fbGuardar();
+}
+
+// ============================================================
+// RENDER GENERAL
+// ============================================================
+function render(){
+  calcStats();
+  renderProgreso();
+  renderRepetidas();
+}
+
+// ============================================================
+// ESTADÍSTICAS
+// ============================================================
+function calcStats(){
+  let total=0, tengo=0, falta=0, rep=0;
+  let cTodos=album.length, cPend=0, cComp=0;
+
+  album.forEach(p=>{
+    const tot=totalPais(p);
+    total+=tot;
+    let pFalta=false, pComp=true;
+    for(let i=1;i<=tot;i++){
+      const n=numReal(p,i);
+      if(p.faltas.includes(n)){falta++;pFalta=true;pComp=false;}
+      else if(p.tengos.includes(n)){tengo++;}
+      else{pComp=false;}
+    }
+    if(pFalta) cPend++;
+    if(pComp)  cComp++;
+    rep += (repetidas[p.id]||[]).length;
+  });
+
+  const pct = total>0 ? Math.round(tengo/total*100) : 0;
+  document.getElementById('statPct').textContent  = pct+'%';
+  document.getElementById('statBar').style.width  = pct+'%';
+  document.getElementById('statSub').textContent  = `${tengo} de ${total} estampas`;
+  document.getElementById('statTengo').textContent = tengo;
+  document.getElementById('statFalta').textContent = falta;
+  document.getElementById('statRep').textContent   = rep;
+  document.getElementById('badgeRep').textContent  = rep;
+  document.getElementById('repTotal').textContent  = rep;
+
+  document.getElementById('cTodos').textContent = cTodos;
+  document.getElementById('cPend').textContent  = cPend;
+  document.getElementById('cComp').textContent  = cComp;
+}
+
+// ============================================================
+// RENDER PROGRESO
+// ============================================================
+function renderProgreso(){
+  const grid = document.getElementById('gridProgreso');
+  grid.innerHTML = '';
+  const busq = document.getElementById('busqProg').value.toLowerCase();
+
+  album.forEach(p=>{
+    if(busq && !p.nombre.toLowerCase().includes(busq) && !p.abrev.toLowerCase().includes(busq) && !('grupo '+p.grupo).toLowerCase().includes(busq)) return;
+    const tot=totalPais(p);
+    let tc=0,fc=0;
+    for(let i=1;i<=tot;i++){
+      const n=numReal(p,i);
+      if(p.tengos.includes(n)) tc++;
+      if(p.faltas.includes(n)) fc++;
+    }
+    const done = tc===tot;
+    if(filtro==='pendientes' && fc===0) return;
+    if(filtro==='completos'  && !done)  return;
+
+    // stamps
+    let stamps='<div class="stamps">';
+    for(let i=1;i<=tot;i++){
+      const n=numReal(p,i), lbl=labelNum(n);
+      const isEsp=p.esEspecial && n!==99;
+      let cls,icon='';
+      if(p.tengos.includes(n)){cls='s-verde';icon='<span class="s-icon" style="color:#34d399">✓</span>';}
+      else if(p.faltas.includes(n)){cls='s-roja';icon='<span class="s-icon" style="color:#f87171">✕</span>';}
+      else{cls='s-vacia';}
+      stamps+=`<button class="stamp ${cls}" onclick="abreModalProg('${p.id}',${n})" title="${p.nombre} · ${lbl}">${icon}<span class="${isEsp?'s-label':''}">${ isEsp?'FWC '+n : lbl}</span></button>`;
+    }
+    stamps+='</div>';
+
+    // faltantes pills
+    let footer='';
+    const fl=p.faltas.map(f=>labelNum(f));
+    if(fl.length>0){
+      footer=`<div class="card-footer"><span class="pill-label pill-red">Faltan:</span>${fl.map(f=>`<span class="pill pill-r">${f}</span>`).join('')}</div>`;
+    } else if(done){
+      footer=`<div class="card-footer"><span class="done-label">⭐ ¡SECCIÓN COMPLETADA! ⭐</span></div>`;
+    }
+
+    const card=document.createElement('div');
+    card.className='card'+(done?' card-done':'');
+    card.innerHTML=`
+      <div class="card-head">
+        <div class="card-info">
+          <span class="flag">${p.flag}</span>
+          <div>
+            <div class="card-name">${p.nombre}</div>
+            <div class="card-sub" style="display:flex;align-items:center;gap:6px;margin-top:3px">
+              <span style="background:rgba(99,102,241,.18);color:#a5b4fc;font-size:10px;font-weight:800;padding:1px 7px;border-radius:6px;letter-spacing:.04em">${p.abrev}</span>
+              ${p.pag ? `<span style="font-size:10px;color:#64748b">Pág. ${p.pag}</span>` : ''}
+              <span style="background:rgba(16,185,129,.15);color:#6ee7b7;font-size:10px;font-weight:800;padding:1px 6px;border-radius:6px">Grupo ${p.grupo}</span>
+            </div>
+          </div>
+        </div>
+        <div class="card-count">${tc}/${tot}<span>Conseguidas</span></div>
+      </div>
+      <div class="card-prog"><div class="card-prog-fill ${done?'fill-done':'fill-wip'}" style="width:${(tc/tot)*100}%"></div></div>
+      ${stamps}${footer}`;
+    grid.appendChild(card);
+  });
+
+  if(!grid.children.length) grid.innerHTML='<div class="empty"><p>Sin resultados</p><p>Ajusta la búsqueda o el filtro</p></div>';
+}
+
+// ============================================================
+// RENDER REPETIDAS
+// ============================================================
+function renderRepetidas(){
+  const grid=document.getElementById('gridRepetidas');
+  grid.innerHTML='';
+  const busq=document.getElementById('busqRep').value.toLowerCase();
+
+  album.forEach(p=>{
+    if(busq && !p.nombre.toLowerCase().includes(busq) && !p.abrev.toLowerCase().includes(busq) && !('grupo '+p.grupo).toLowerCase().includes(busq)) return;
+    const tot=totalPais(p), rep=(repetidas[p.id]||[]);
+
+    let stamps='<div class="stamps">';
+    for(let i=1;i<=tot;i++){
+      const n=numReal(p,i), lbl=labelNum(n);
+      const isEsp=p.esEspecial && n!==99;
+      let cls,icon='';
+      if(rep.includes(n)){cls='s-amarilla';icon='<span class="s-icon" style="color:#fbbf24;font-size:7px">2+</span>';}
+      else if(p.tengos.includes(n)){cls='s-verde';icon='<span class="s-icon" style="color:#34d399">✓</span>';}
+      else{cls='s-vacia';}
+      stamps+=`<button class="stamp ${cls}" onclick="abreModalRep('${p.id}',${n})" title="${p.nombre} · ${lbl}">${icon}<span class="${isEsp?'s-label':''}">${ isEsp?'FWC '+n:lbl}</span></button>`;
+    }
+    stamps+='</div>';
+
+    const rl=rep.map(f=>labelNum(f));
+    let footer='';
+    if(rl.length>0){
+      footer=`<div class="card-footer"><span class="pill-label pill-yellow">Repetidas:</span>${rl.map(f=>`<span class="pill pill-y">${f}</span>`).join('')}</div>`;
+    } else {
+      footer=`<div class="card-footer"><span style="font-size:11px;color:#475569;font-weight:600">Sin repetidas marcadas</span></div>`;
+    }
+
+    const card=document.createElement('div');
+    card.className='card'+(rep.length?'':' ');
+    if(rep.length) card.style.borderColor='rgba(245,158,11,.25)';
+    card.innerHTML=`
+      <div class="card-head">
+        <div class="card-info">
+          <span class="flag">${p.flag}</span>
+          <div>
+            <div class="card-name">${p.nombre}</div>
+            <div class="card-sub" style="display:flex;align-items:center;gap:6px;margin-top:3px">
+              <span style="background:rgba(99,102,241,.18);color:#a5b4fc;font-size:10px;font-weight:800;padding:1px 7px;border-radius:6px;letter-spacing:.04em">${p.abrev}</span>
+              ${p.pag ? `<span style="font-size:10px;color:#64748b">Pág. ${p.pag}</span>` : ''}
+              <span style="background:rgba(16,185,129,.15);color:#6ee7b7;font-size:10px;font-weight:800;padding:1px 6px;border-radius:6px">Grupo ${p.grupo}</span>
+            </div>
+          </div>
+        </div>
+        <div class="card-count" style="color:#fbbf24">${rep.length}<span style="color:#64748b">Repetidas</span></div>
+      </div>
+      ${stamps}${footer}`;
+    grid.appendChild(card);
+  });
+
+  if(!grid.children.length) grid.innerHTML='<div class="empty"><p>Sin resultados</p></div>';
+}
+
+// ============================================================
+// TABS & FILTROS
+// ============================================================
+function setTab(t){
+  tab=t;
+  document.getElementById('panelProgreso').style.display  = t==='progreso'  ?'':'none';
+  document.getElementById('panelRepetidas').style.display = t==='repetidas' ?'':'none';
+  document.getElementById('tabProgreso').className  = 'tab '+(t==='progreso' ?'tab-on':'tab-off');
+  document.getElementById('tabRepetidas').className = 'tab '+(t==='repetidas'?'tab-on':'tab-off');
+}
+
+function setFiltro(f){
+  filtro=f;
+  ['todos','pendientes','completos'].forEach(k=>{
+    document.getElementById('f-'+k).className='fbtn '+(k===f?'fbtn-on':'fbtn-off');
+  });
+  renderProgreso();
+}
+
+// ============================================================
+// MODAL PROGRESO
+// ============================================================
+function abreModalProg(id,n){
+  const p=album.find(x=>x.id===id); if(!p) return;
+  selProg={paisId:id,num:n};
+  document.getElementById('mpFlag').textContent   = p.flag;
+  document.getElementById('mpNombre').textContent = p.nombre;
+  document.getElementById('mpAbrev').textContent  = p.abrev;
+  document.getElementById('mpNum').textContent    = p.esEspecial && n!==99 ? 'FWC '+n : labelNum(n);
+  document.getElementById('modalProg').classList.add('open');
+}
+function cierraModalProg(){ document.getElementById('modalProg').classList.remove('open'); }
+
+function setEstampaProgreso(s){
+  const p=album.find(x=>x.id===selProg.paisId); if(!p) return;
+  const n=selProg.num;
+  p.faltas=p.faltas.filter(x=>x!==n);
+  p.tengos=p.tengos.filter(x=>x!==n);
+  if(s==='tengo'){p.tengos.push(n);p.tengos.sort((a,b)=>a-b);}
+  else if(s==='falta'){p.faltas.push(n);p.faltas.sort((a,b)=>a-b);}
+  guardar(); render(); cierraModalProg();
+  toast('Estampa actualizada ✓');
+}
+
+// ============================================================
+// MODAL REPETIDAS
+// ============================================================
+function abreModalRep(id,n){
+  const p=album.find(x=>x.id===id); if(!p) return;
+  selRep={paisId:id,num:n};
+  document.getElementById('mrFlag').textContent   = p.flag;
+  document.getElementById('mrNombre').textContent = p.nombre;
+  document.getElementById('mrAbrev').textContent  = p.abrev;
+  document.getElementById('mrNum').textContent    = p.esEspecial && n!==99 ? 'FWC '+n : labelNum(n);
+  document.getElementById('modalRep').classList.add('open');
+}
+function cierraModalRep(){ document.getElementById('modalRep').classList.remove('open'); }
+
+function setRepetida(marcar){
+  const id=selRep.paisId, n=selRep.num;
+  if(!repetidas[id]) repetidas[id]=[];
+  if(marcar){ if(!repetidas[id].includes(n)){repetidas[id].push(n);repetidas[id].sort((a,b)=>a-b);} }
+  else{ repetidas[id]=repetidas[id].filter(x=>x!==n); }
+  guardar(); render(); cierraModalRep();
+  toast(marcar?'Marcada como repetida 🔄':'Quitada de repetidas ✓');
+}
+
+// ============================================================
+// COMPARTIR
+// ============================================================
+function compartirFaltantes(){
+  let msg='📝 *MIS FALTANTES · MUNDIAL 2026* ⚽\n';
+  let hay=false;
+  album.forEach(p=>{ if(p.faltas.length){hay=true;msg+=`• *${p.flag} ${p.nombre}:* ${p.faltas.map(f=>labelNum(f)).join(', ')}\n`;} });
+  if(!hay) msg='🎉 ¡No me falta ninguna!';
+  copiar(msg,'📋 Lista de faltantes copiada');
+}
+function compartirRepetidas(){
+  let msg='🔄 *MIS REPETIDAS · MUNDIAL 2026* ⚽\n';
+  let hay=false;
+  album.forEach(p=>{ const r=(repetidas[p.id]||[]); if(r.length){hay=true;msg+=`• *${p.flag} ${p.nombre}:* ${r.map(f=>labelNum(f)).join(', ')}\n`;} });
+  if(!hay) msg='🙅 No tengo repetidas aún.';
+  copiar(msg,'📋 Lista de repetidas copiada');
+}
+function copiar(txt,msg){
+  const ta=document.createElement('textarea');
+  ta.value=txt; document.body.appendChild(ta); ta.select();
+  try{document.execCommand('copy');toast(msg);}catch{toast('No se pudo copiar');}
+  document.body.removeChild(ta);
+}
+
+// ============================================================
+// RESET
+// ============================================================
+function resetear(){
+  if(!confirm('¿Reiniciar TODOS los datos? Empezarás desde cero.')) return;
+  album=datosLimpios(); repetidas={};
+  guardar(); render();
+  toast('¡Datos reiniciados, empieza de cero! 🆕');
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+let toastTimer=null;
+function toast(msg){
+  const el=document.getElementById('toast');
+  document.getElementById('toastMsg').textContent=msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('show'),3000);
+}
+
+// ============================================================
+// ARRANQUE
+// ============================================================
+// Arrancar siempre de inmediato (usa localStorage si Firebase aún no está listo)
+init();
+// Si Firebase llega después del arranque inicial, re-sincronizar desde la nube
+if(!window._fbReady){
+  document.addEventListener('fbReady', async ()=>{
+    const ok = await fbCargar();
+    if(ok) render();
+  });
+}
+</script>
+</body>
+</html>
